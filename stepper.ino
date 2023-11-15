@@ -1,43 +1,59 @@
 #include <Servo.h>
-#include <AccelStepper.h>
-#define motorInterfaceType 1
 
 Servo myServo;
 const int dirPin = 2;
 const int stepPin = 3;
 const int servoPin = 11;
-int servoPosition = 65;
-int servoSpeed = 100;
-int targetRevs = 15;
-AccelStepper myStepper(motorInterfaceType, stepPin, dirPin);
+int revs = 0;
+
+int servoPosition = 64;
+int servoSpeed = 30;
+int servoPosMin = 42;
+int servoPosMax = 64;
+int targetRevs = 1;
+double wireWidth = 0.06;
+double pipakWidth = 6.00;
+const int stepsPerRevolution = 200;
+bool change = false;
+int prev = 0;
+double windingNum = pipakWidth / wireWidth;
+
 
 void setup() {
-  Serial.begin(9600);
+  pinMode(stepPin, OUTPUT);
+  pinMode(dirPin, OUTPUT);
+  Serial.begin(115200);
   myServo.attach(servoPin);
   myServo.write(servoPosition);
-  myStepper.setMaxSpeed(800);
-  myStepper.setSpeed(800);
 }
 
 void loop() {
-  while (stepperRevs() < targetRevs) {
-    myStepper.runSpeed();
-    Serial.println(stepperRevs());
+  digitalWrite(dirPin, HIGH);
+  while (revs < targetRevs) {
+    makeOneRev();
   }
-  //servoRun();
+  Serial.print(revs);
+  delay(2000);
 }
 
-int stepperRevs() {
-  return myStepper.currentPosition() / 200;
+void makeOneRev() {
+  for (int x = 0; x < stepsPerRevolution; x++) {
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(1000);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(1000);
+  }
+  revs = revs + 1;
 }
 
 void servoRun() {
-  for (servoPosition = 40; servoPosition <= 65; servoPosition += 1) {
-    myServo.write(servoPosition);
-    delay(servoSpeed);
-  }
-  for (servoPosition = 65; servoPosition >= 40; servoPosition -= 1) {
-    myServo.write(servoPosition);
-    delay(servoSpeed);
-  }
+
+  // for (servoPosition = servoPosMin; servoPosition <= servoPosMax; servoPosition += 1) {
+  //   myServo.write(servoPosition);
+  //   break;
+  // }
+  // for (servoPosition = servoPosMax; servoPosition >= servoPosMin; servoPosition -= 1) {
+  //   myServo.write(servoPosition);
+  //   break;
+  // }
 }
