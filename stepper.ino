@@ -10,7 +10,7 @@ const int stepsPerRevolution = 200;
 const int servoPosMin = 62;
 const int servoPosMax = 98;
 
-double wireWidth = 0.15;
+double wireWidth = 0.30;
 double pipakWidth = 6.00;
 int buttonState;
 int revs = 0;
@@ -43,13 +43,13 @@ void loop() {
 void makeOneRev() {
   for (int x = 0; x < stepsPerRevolution; x++) {
     digitalWrite(STEPPER_PIN, HIGH);
-    delayMicroseconds(900);
+    delayMicroseconds(1000);
     digitalWrite(STEPPER_PIN, LOW);
-    delayMicroseconds(900);
+    delayMicroseconds(1000);
   }
   counter = counter + 1;
 
-  if (counter >= stepNum) {
+  if (counter >= round(stepNum)) {
     servoMove();
     counter = 0;
   }
@@ -70,7 +70,7 @@ void calibrate() {
   Serial.println("-- -- -- -- --");
   Serial.println("Winding number per layer: " + String(windingNum));
   Serial.println("Servo move range: " + String(servoRange));
-  Serial.println("Move servo every " + String(stepNum) + " revs");
+  Serial.println("Move servo every " + String(round(stepNum)) + " revs");
   Serial.println("Reset servo pos to  0");
   myServo.write(servoPosMax);
   Serial.println("Reset counter to  0");
