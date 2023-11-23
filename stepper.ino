@@ -5,17 +5,19 @@ const int dirPin = 2;
 const int stepPin = 3;
 const int servoPin = 11;
 const int stepsPerRevolution = 200;
-
-int revs = 0;
-int servoSpeed = 30;
-int servoPosMin = 50;
-int servoPosMax = 73;
-int targetRevs = 16;
-int servoPosition = 73;
-int factor = -1;
-int counter = 0;
+const int servoPosMin = 65;
+const int servoPosMax = 85;
 double wireWidth = 0.06;
 double pipakWidth = 6.00;
+
+int revs = 0;
+int factor = -1;
+int counter = 0;
+
+int servoSpeed = 30;
+int targetRevs = 200;  // docelowa liczba nawojow
+
+boolean firstRun = true;
 double windingNum = pipakWidth / wireWidth;
 int stepNum = windingNum / (servoPosMax - servoPosMin);
 
@@ -24,11 +26,15 @@ void setup() {
   pinMode(dirPin, OUTPUT);
   Serial.begin(115200);
   myServo.attach(servoPin);
-  myServo.write(servoPosition);
+  digitalWrite(dirPin, HIGH);
 }
 
 void loop() {
-  digitalWrite(dirPin, HIGH);
+  if (firstRun == true) {
+    myServo.write(servoPosMax);
+    firstRun = false;
+  }
+
   while (revs < targetRevs) {
     makeOneRev();
     Serial.println(revs);
@@ -44,9 +50,9 @@ void makeOneRev() {
   }
   counter = counter + 1;
 
-  if (counter == 4) {
+  if (counter == stepNum) {
     servoMove();
-    Serial.print(myServo.read());
+    Serial.print("pyk ");
     counter = 0;
   }
   revs = revs + 1;
