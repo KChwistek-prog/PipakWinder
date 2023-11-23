@@ -1,52 +1,56 @@
 #include <Servo.h>
 
 Servo myServo;
-const int dirPin = 2;
-const int stepPin = 3;
-const int servoPin = 11;
-const int stepsPerRevolution = 200;
+const int DIR_PIN = 2;      //winding direction pin HIGH = CW, LOW=CCW
+const int STEPPER_PIN = 3;  //stepper motor pin
+const int SERVO_PIN = 11;
+const int BUTTON_PIN = 4;
 
-int revs = 0;
-int servoSpeed = 30;
-int servoPosMin = 50;
-int servoPosMax = 73;
-int targetRevs = 16;
-int servoPosition = 73;
-int factor = -1;
-int counter = 0;
-double wireWidth = 0.06;
+const int stepsPerRevolution = 200;
+const int servoPosMin = 62;
+const int servoPosMax = 98;
+
+double wireWidth = 0.30;
 double pipakWidth = 6.00;
+int buttonState;
+int revs = 0;
+int factor = -1;
+int counter;
+int servoSpeed = 10;
+
 double windingNum = pipakWidth / wireWidth;
-int stepNum = windingNum / (servoPosMax - servoPosMin);
+double servoRange = servoPosMax - servoPosMin;
+double stepNum = windingNum / (servoRange);
 
 void setup() {
-  pinMode(stepPin, OUTPUT);
-  pinMode(dirPin, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(STEPPER_PIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
   Serial.begin(115200);
-  myServo.attach(servoPin);
-  myServo.write(servoPosition);
+  myServo.attach(SERVO_PIN);
+  digitalWrite(DIR_PIN, LOW);
+  calibrate();
 }
 
 void loop() {
-  digitalWrite(dirPin, HIGH);
-  while (revs < targetRevs) {
+
+  buttonState = digitalRead(BUTTON_PIN);
+  if (buttonState == LOW) {
     makeOneRev();
-    Serial.println(revs);
   }
 }
 
 void makeOneRev() {
   for (int x = 0; x < stepsPerRevolution; x++) {
-    digitalWrite(stepPin, HIGH);
+    digitalWrite(STEPPER_PIN, HIGH);
     delayMicroseconds(1000);
-    digitalWrite(stepPin, LOW);
+    digitalWrite(STEPPER_PIN, LOW);
     delayMicroseconds(1000);
   }
   counter = counter + 1;
 
-  if (counter == 4) {
+  if (counter >= round(stepNum)) {
     servoMove();
-    Serial.print(myServo.read());
     counter = 0;
   }
   revs = revs + 1;
@@ -60,4 +64,15 @@ void servoMove() {
   } else if (myServo.read() == servoPosMin) {
     factor = 1;
   }
+}
+
+void calibrate() {
+  Serial.println("-- -- -- -- --");
+  Serial.println("Winding number per layer: " + String(windingNum));
+  Serial.println("Servo move range: " + String(servoRange));
+  Serial.println("Move servo every " + String(round(stepNum)) + " revs");
+  Serial.println("Reset servo pos to  0");
+  myServo.write(servoPosMax);
+  Serial.println("Reset counter to  0");
+  counter = 0;
 }
